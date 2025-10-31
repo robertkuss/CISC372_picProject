@@ -60,8 +60,17 @@ uint8_t getPixelValue(Image* srcImage,int x,int y,int bit,Matrix algorithm){
 void convolute(Image* srcImage,Image* destImage,Matrix algorithm){
     int row,pix,bit,span;
     span=srcImage->bpp*srcImage->bpp;
-#   pragma omp parallel
-    for (row=0;row<srcImage->height;row++){
+#ifdef _OPENMP
+    int currentRank = omp_get_thread_num();
+    int threadCount = omp_get_num_threads();
+#else
+    int currentRank = 0;
+    int threadCount = 1;
+#endif
+    int threadRowCount = srcImage->height/threadCount;
+    int start = currentRank * threadRowCount;
+    int end = start + threadRowCount;
+    for (row=start;row<end;row++){
         for (pix=0;pix<srcImage->width;pix++){
             for (bit=0;bit<srcImage->bpp;bit++){
                 destImage->data[Index(pix,row,srcImage->width,bit,srcImage->bpp)]=getPixelValue(srcImage,pix,row,bit,algorithm);
@@ -97,12 +106,14 @@ int main(int argc,char** argv){
     t1=time(NULL);
 
     stbi_set_flip_vertically_on_load(0); 
-    if (argc!=3) return Usage();
+    if (argc!=4) return Usage();
     char* fileName=argv[1];
     if (!strcmp(argv[1],"pic4.jpg")&&!strcmp(argv[2],"gauss")){
         printf("You have applied a gaussian filter to Gauss which has caused a tear in the time-space continum.\n");
     }
     enum KernelTypes type=GetKernelType(argv[2]);
+
+    int threadCount = strtol(argv[3],NULL,10);
 
     Image srcImage,destImage,bwImage;   
     srcImage.data=stbi_load(fileName,&srcImage.width,&srcImage.height,&srcImage.bpp,0);
@@ -115,7 +126,9 @@ int main(int argc,char** argv){
     destImage.height=srcImage.height;
     destImage.width=srcImage.width;
     destImage.data=malloc(sizeof(uint8_t)*destImage.width*destImage.bpp*destImage.height); 
+#pragma omp parallel num_threads(threadCount)
     convolute(&srcImage,&destImage,algorithms[type]);
+
     stbi_write_png("output.png",destImage.width,destImage.height,destImage.bpp,destImage.data,destImage.bpp*destImage.width);
     stbi_image_free(srcImage.data); 
     free(destImage.data);
