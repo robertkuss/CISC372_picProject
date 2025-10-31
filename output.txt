@@ -1,0 +1,13 @@
+Script started on Thu Oct 30 23:24:02 2025
+]0;robertjk@r1n18.darwin:~/assignments/CISC372_picProject[?1034h[robertjk@r1n18 CISC372_picProject]$ make image_pthread
+gcc -g image_pthread.c -o image_pthread -lm -lpthread
+]0;robertjk@r1n18.darwin:~/assignments/CISC372_picProject[robertjk@r1n18 CISC372_picProject]$ srun ./image_pthread pic1.jpg edge 8
+Took 7 seconds
+]0;robertjk@r1n18.darwin:~/assignments/CISC372_picProject[robertjk@r1n18 CISC372_picProject]$ make image_omp
+gcc -g -fopenmp -o image_omp image_omp.c -lm
+]0;robertjk@r1n18.darwin:~/assignments/CISC372_picProject[robertjk@r1n18 CISC372_picProject]$ srun ./image_omp pic1.jpg edge 8
+Took 6 seconds
+]0;robertjk@r1n18.darwin:~/assignments/CISC372_picProject[robertjk@r1n18 CISC372_picProject]$ exit
+exit
+
+Script done on Thu Oct 30 23:25:25 2025
